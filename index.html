@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PLEMA Inference Demo</title>
+    <!-- Bootstrap CSS (CDN) -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+      crossorigin="anonymous"
+    />
+    <style>
+      body {
+        padding-top: 40px;
+      }
+      .img-preview {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+      }
+      .card {
+        border-radius: 14px;
+      }
+      .form-hint {
+        font-size: 0.9rem;
+        color: #6c757d;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header class="mb-4">
+        <h1 class="h3">PLEMA – Tuberculosis Detection</h1>
+        <p class="text-muted">
+          Prompt Lung Examination via Machine Automation (PLEMA) is an
+          AI-assisted tool for detecting tuberculosis.
+        </p>
+      </header>
+
+      <!-- Flash messages -->
+      {% with messages = get_flashed_messages() %} {% if messages %}
+      <div class="alert alert-warning" role="alert">{{ messages[0] }}</div>
+      {% endif %} {% endwith %}
+
+      <div class="card p-4 mb-4">
+        <form method="POST" enctype="multipart/form-data">
+          <div class="row g-3">
+            <div class="col-lg-6">
+              <div class="mb-3">
+                <label for="image" class="form-label"
+                  >Choose image (JPG/PNG)</label
+                >
+                <input
+                  class="form-control"
+                  type="file"
+                  id="image"
+                  name="image"
+                  accept=".jpg,.jpeg,.png"
+                  required
+                />
+                <div class="form-hint mt-1">
+                  Upload a chest X-ray image for inference. The annotated result
+                  will be used in the report.
+                </div>
+              </div>
+              <div class="mb-3">
+                <img id="preview" class="img-preview d-none" alt="Preview" />
+              </div>
+            </div>
+
+            <div class="col-lg-6">
+              <h5 class="mb-3">Patient Details</h5>
+              <div class="row g-2">
+                <div class="col-md-8">
+                  <label class="form-label" for="patient_name">Name</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="patient_name"
+                    name="patient_name"
+                    placeholder="Juan Dela Cruz"
+                  />
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label" for="patient_age">Age</label>
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="patient_age"
+                    name="patient_age"
+                    min="0"
+                    step="1"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="patient_id">Patient ID</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="patient_id"
+                    name="patient_id"
+                    placeholder="PID-0001"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="patient_sex">Sex</label>
+                  <select
+                    class="form-select"
+                    id="patient_sex"
+                    name="patient_sex"
+                  >
+                    <option value="" selected>—</option>
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Intersex</option>
+                    <option>Prefer not to say</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" for="remarks">Remarks</label>
+                  <textarea
+                    class="form-control"
+                    id="remarks"
+                    name="remarks"
+                    rows="4"
+                    placeholder="Enter clinical notes, observations, or next steps..."
+                  ></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="export_type"
+                    >Export Type</label
+                  >
+                  <select
+                    class="form-select"
+                    id="export_type"
+                    name="export_type"
+                  >
+                    <option value="pdf" selected>PDF (A4)</option>
+                    <option value="png">PNG (A4)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-grid mt-3">
+            <button type="submit" class="btn btn-primary">
+              Run Inference & Export Report
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {% if orig_url and out_url %}
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card p-3">
+            <h5>Original</h5>
+            <img src="{{ orig_url }}" class="img-preview" alt="Original" />
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card p-3">
+            <h5>Result (with boxes)</h5>
+            <img src="{{ out_url }}" class="img-preview" alt="Processed" />
+          </div>
+        </div>
+      </div>
+      {% endif %} {% if report_url %}
+      <div class="card p-4 mb-5 border-success">
+        <h5 class="text-success mb-2">Report Ready</h5>
+        <p class="mb-2">Download the generated report:</p>
+        <a class="btn btn-success" href="{{ report_url }}" download
+          >Download Report</a
+        >
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Bootstrap JS (optional, for components) -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+      crossorigin="anonymous"
+    ></script>
+
+    <!-- Simple preview script -->
+    <script>
+      const input = document.getElementById("image");
+      const preview = document.getElementById("preview");
+      input.addEventListener("change", () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        preview.src = URL.createObjectURL(file);
+        preview.classList.remove("d-none");
+      });
+    </script>
+  </body>
+</html>
